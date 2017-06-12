@@ -1,0 +1,44 @@
+doctype html
+html
+  head
+    title= title
+
+    meta(http-equiv="Content-Type",content="text/html; charset=utf-8")
+    link(type="text/css",rel="stylesheet",href="/stylesheets/style.css")
+    script(src="http://127.0.0.1:8080/socket.io/socket.io.js").
+  body
+    h1= title
+    div#convo  
+	    ul.chat-thread(data-from="Sonu Joshi")
+	            li.me yes, what time suits you?
+	            li.me yes, what time suits you?
+	            li.you yes, what time suits you?
+	            li.me yes, what time suits you?
+	    input.massage.
+    script. 
+     var  ws={
+            data:{
+                url:"ws://127.0.0.1:8080"
+            },
+            send:function(obj,mark,data){
+                 obj.emit(mark, data);
+            },
+            resend:function(obj,mark,fn){
+                 obj.on(mark, function(data) {
+                       //console.log(data);
+                       fn&&fn(data);
+                });
+            },socketObj:function(){
+                socket = io.connect(this.data.url);
+                // console.log("创建一个io实例");
+                return socket
+            }   
+        }
+
+        var data={server:"personWS",from:"daxiong",to:"god",msg:"我是大雄！"};
+        var myobj= ws.socketObj();
+        ws.send(myobj,data.server,data);
+        ws.resend(myobj,data.server,function(data){
+            console.log(data)
+        }) ;
+ 
