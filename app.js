@@ -45,7 +45,7 @@ var db = {
 						nichen: rows[i].nichen
 					})
 				}
-				//console.log(arr)
+ 
 				fn && fn(arr);
 
 			}
@@ -65,7 +65,7 @@ var db = {
 
 			} else if (rows) {
 	 					
-					fn && fn(rows[0].MD5);	
+				return	fn && fn(rows[0].MD5);	
 			 
 				
  			   // resolve(rows[0].MD5);
@@ -148,6 +148,8 @@ var logic = {
 		return rs;
 	},
 	do: function(items, data) {
+		console.log(items);
+
 				var _this=this;
 		if (data.me) data.me = this.stripscript(data.me);
 		if (data.you) data.you = this.stripscript(data.you);
@@ -163,9 +165,9 @@ var logic = {
 			//console.log(data.me + " 发送给：" + data.you);
 			break;
 		case "userInfo"://用户配置信息
- 		
-			db.getUserinfo(data, function(cbdata) {
+ 			 db.getUserinfo(data, function(cbdata) {
 				_this.emitfn("userInfo",data.me, cbdata);
+				console.log(data.me)
 				console.log(cbdata)
 			})
 		break;
@@ -185,7 +187,7 @@ var logic = {
  
 		 db.getUserMD5(msgto,function(md5){
 			io.emit(mark+msgto+md5, data);
-			 console.log(mark+msgto+md5);
+			  console.log("发送了一个:"+mark+msgto+md5);
 		});
 	
 		
@@ -249,7 +251,7 @@ logic.init();
 	});
 	//异步处理
 	promise.then(function(value) {
-		console.log(value);
+		//console.log(value);
 		return value;
 		// success
 	}, function(value) {

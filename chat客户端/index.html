@@ -33,6 +33,10 @@
       <p class="line">
        <label>你要发给谁：</label><input type="text" name=""  v-model="config.you" name="friends" @input="inputFunc" class="text" />
         </p>
+
+        <p class="line">
+       <label>MD5：</label><input type="text" name=""  v-model="config.MD5" name="MD5" @input="inputFunc" class="text" />
+        </p>
        </div>
     </div>
 </div>
@@ -48,7 +52,7 @@ var vm = new Vue({
       server: "personWS",
       me: "daxiong",
       you: "god",
-      MD5:"4d2a107841a9fe18",
+      MD5:"4d2a107841a9fe18"
 
     },
     myinfo: [{
@@ -56,7 +60,6 @@ var vm = new Vue({
       face: "",
       nichen: ""
     }],
-    //先设置控制，防止阻塞报错
     yourinfo: [{
       username: "",
       face: "",
@@ -67,9 +70,9 @@ var vm = new Vue({
     history: 20
   },
   created: function() {
-    var _this = this;
-     socket = io.connect(_this.config.url); //创建一个ws链接
-    _this.$options.methods.ready(_this)
+     _self = this;//data生命周期只有在这里才有效
+     socket = io.connect(_self.config.url); //创建一个ws链接
+    _self.$options.methods.ready(_self)
  
   },
   methods:
@@ -89,7 +92,7 @@ var vm = new Vue({
           if(data==1){
             document.title=""+_this.yourinfo.nichen+"正在输入......";   
           }else{
-                 document.title="正在和"+_this.yourinfo.nichen+"聊天";
+            document.title="正在和"+_this.yourinfo.nichen+"聊天";
           }
         });
 
@@ -107,7 +110,7 @@ var vm = new Vue({
     },inputFunc:function(){
       var _this = this;
          _this.ready(_this);
-         console.log("ss")
+  
        
     },
     upconfig:function(obj){
@@ -119,25 +122,19 @@ var vm = new Vue({
         me: obj.config.me,
         you: obj.config.you,
       };
-      console.log(obj.config.me+"发送配置要求")
       _this.send(socket, "userInfo", data);
 
       _that.resend(socket, "userInfo"+obj.config.me, function(data) { 
       //聊天用户配置   _this.config.myface=  
-      
        _that.getuserinfo(obj.config.me, data, function(info) {
         _that.myinfo = info; //指向 
-        console.log("返回配置 me")
       });
 
       _that.getuserinfo(obj.config.you, data, function(info) {
         _that.yourinfo = info;
- 
-         console.log("返回配置 you")
 
- 
       });
-    document.title="正在和"+_that.yourinfo.nichen+"聊天"; //vue2 
+    document.title="正在和"+_that.yourinfo.nichen+"聊天"; 
 
     });
 
@@ -179,13 +176,16 @@ var vm = new Vue({
       obj.emit(mark, data);
     },
     resend: function(obj, mark, fn) {
- 
-      var md5code="4d2a107841a9fe18";
-      obj.on(mark+md5code, function(data) {
   
+         var md5code=_self.config.MD5;
+        
+      obj.on(mark+md5code, function(data) {
+      
        fn && fn(data);
 
       });
+ 
+   
     },
     getuserinfo: function(username, data, fn) {
       //这个函数只是返回某一个用户配置数组
@@ -194,8 +194,7 @@ var vm = new Vue({
         if (data[i].username == username) {
 
           fn && fn(data[i]);
-
-
+ 
 
         }
       }
