@@ -1,7 +1,7 @@
 
 exports.dbs = function() {
-	var promise = new Promise(function(resolve, reject) {
-		 var app = require('express')();
+var promise = new Promise(function(resolve, reject) {
+var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var mysql = require('mysql');
