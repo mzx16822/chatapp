@@ -26,7 +26,11 @@ var db = {
 	},
 	getUserinfo: function(userinfo, fn) {
 		var _this = this, _sql = "",sql="";
-		_sql += " username='" + userinfo.me +"' or "+" username='" + userinfo.you +"' " ;
+		if(userinfo.me){
+			_sql += " username='" + userinfo.me +"'";
+		}else if(userinfo.you){
+			_sql += "' or "+" username='" + userinfo.you +"' " ;
+		}
            sql = "select * from userinfo where " + _sql + " order by id desc";
  
 		var arr = [];
