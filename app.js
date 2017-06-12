@@ -20,6 +20,7 @@ var db = {
 		return connection;
 	},
 	sqlQuery: function(sql, fn) {
+			//	console.log(sql);
 		this.init().query(sql, function(err, rows, fields) {
 			fn && fn(err, rows, fields);
 		})
@@ -28,11 +29,14 @@ var db = {
 		var _this = this, _sql = "",sql="";
 		if(userinfo.me){
 			_sql += " username='" + userinfo.me +"'";
-		}else if(userinfo.you){
-			_sql += "' or "+" username='" + userinfo.you +"' " ;
 		}
+
+		if(userinfo.me&&userinfo.you){
+			_sql += " or "+" username='" + userinfo.you +"' " ;
+		}
+		if(!_sql) return false;
+
            sql = "select * from userinfo where " + _sql + " order by id desc";
- 
 		var arr = [];
 
 		_this.sqlQuery(sql, function(err, rows, fields) {
@@ -61,7 +65,7 @@ var db = {
 		var _this = this;
 		if(!username) return false;
 		var sql = "select MD5 from userinfo where username='" + username + "' limit 1";
-		//console.log(sql)
+
 		_this.sqlQuery(sql, function(err, rows, fields) {
 			if (err) {
 				//throw err;
@@ -93,17 +97,17 @@ var db = {
 
 		})
 
-	},insertchatmsg:function(data){
+	},insertchatmsg:function(data,fn){
 		var _this=this;
 		var sql = 'insert into chat_history (username,friends,date,msg) values ("' + data.me + '","' + data.you + '",' + new Date().getTime() + ',"' + data.msg + '")';
-
+ 
 			_this.sqlQuery(sql, function(err, rows, fields) {
 				if (err) {
 					throw err;
 
 				} else if (rows) {
-					logic.emitfn("chat",data.you, data); //给对方发送消息
-					logic.emitfn("chat",data.me, data); //给我发送消息 即使我的消息也由服务器返回消息
+					fn && fn(rows)
+					
 
 				}
 			})
@@ -152,27 +156,33 @@ var logic = {
 		return rs;
 	},
 	do: function(items, data) {
-		console.log(items);
-
-				var _this=this;
+		//console.log(items);
+		var _this=this;
 		if (data.me) data.me = this.stripscript(data.me);
 		if (data.you) data.you = this.stripscript(data.you);
 		if (data.msg) data.msg = this.stripscript(data.msg); /* 暂时统一过滤特殊字符 */
 
 		switch (items) {
-		case "personWS"://聊天信息传送
+		case "chat"://聊天信息传送
+
 			db.setUserlogindate(data.me, function(changedRows) {
 			//	console.log(data.me + "刚刚登陆了！")
 			})
-			db.insertchatmsg(data);
+			db.insertchatmsg(data,function(rows){
+				console.log(data.me)
+				if(rows){	
+				 _this.emitfn("chat",data.you, data); //给对方发送消息
+				 _this.emitfn("chat",data.me, data); //给我发送消息 即使我的消息也由服务器返回消息
+				}
+				
+			});
 			
 			//console.log(data.me + " 发送给：" + data.you);
 			break;
 		case "userInfo"://用户配置信息
  			 db.getUserinfo(data, function(cbdata) {
 				_this.emitfn("userInfo",data.me, cbdata);
-				console.log(data.me)
-				console.log(cbdata)
+				 
 			})
 		break;
 		case "input":
@@ -191,7 +201,7 @@ var logic = {
  
 		 db.getUserMD5(msgto,function(md5){
 			io.emit(mark+msgto+md5, data);
-			  console.log("发送了一个:"+mark+msgto+md5);
+			 // console.log("发送了一个:"+mark+msgto+md5);
 		});
 	
 		
@@ -209,9 +219,8 @@ var logic = {
 	},createConnection:function(socket,MD5){
 		var _this=this;
 		
-			_this.addlisten(socket,"personWS",function(room,data){
+			_this.addlisten(socket,"chat",function(room,data){
 
-			
 			}) 
 			_this.addlisten(socket,"userInfo",function(room,data){
 				

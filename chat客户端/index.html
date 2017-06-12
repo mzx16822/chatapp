@@ -43,6 +43,8 @@
     <script type="text/javascript" src="vue.min.js"></script>
      <script  src="http://192.168.33.233:8080/socket.io/socket.io.js" type=></script>
     <script>
+  //  document.cookie="me="+username;
+
 var vm = new Vue({
   el: '#app',
   data: {
@@ -72,30 +74,30 @@ var vm = new Vue({
   created: function() {
      _self = this;//data生命周期只有在这里才有效
      socket = io.connect(_self.config.url); //创建一个ws链接
-    _self.$options.methods.ready(_self)
- 
+    _self.$options.methods.ready(_self);
   },
   methods:
    {
-    ready:function(obj){
+    ready:function(obj){ 
       var _this=this;
+
         _this.upconfig(obj);//获取用户配置
 
         _this.getHistory(obj); //请求历史消息
        
         _this.resend(socket,"chat"+obj.config.me, function(data) {//实时聊天
-          _this.chatinfo.push(data);
-
+        
+          obj.chatinfo.push(data);
         });
 
         _this.resend(socket,"input"+obj.config.me, function(data) {//实时聊天
           if(data==1){
-            document.title=""+_this.yourinfo.nichen+"正在输入......";   
+            document.title=""+_self.yourinfo.nichen+"正在输入......";   
           }else{
-            document.title="正在和"+_this.yourinfo.nichen+"聊天";
+            document.title="正在和"+_self.yourinfo.nichen+"聊天";
           }
         });
-
+    
     },
     textFunc:function(){
       var _this = this,go=false;
@@ -162,17 +164,18 @@ var vm = new Vue({
         var data = {
           server: this.config.server,
           me: this.config.me,
-          to: this.config.you,
+          you: this.config.you,
           msg: this.message
         };
-        var server = this.config.server;
-        this.$options.methods.send(socket, server, data);
+        // var server = this.config.server;
+        this.$options.methods.send(socket, "chat", data);
         this.message = "";
       }
 
 
     },
     send: function(obj, mark, data) {
+      console.log(mark)
       obj.emit(mark, data);
     },
     resend: function(obj, mark, fn) {
@@ -180,7 +183,6 @@ var vm = new Vue({
          var md5code=_self.config.MD5;
         
       obj.on(mark+md5code, function(data) {
-      
        fn && fn(data);
 
       });
