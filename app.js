@@ -74,7 +74,7 @@ var db = {
 
 			} else if (rows) {
 	 					
-				return	fn && fn(rows[0].MD5);	
+			 fn && fn(rows[0].MD5);	
 			 
 				
  			   // resolve(rows[0].MD5);
@@ -87,7 +87,7 @@ var db = {
 		var _this = this;
 		var sql = "update userinfo set logdate='" + new Date().getTime() + "' where username='" + username + "'";
 
-		return _this.sqlQuery(sql, function(err, rows, fields) {
+		 _this.sqlQuery(sql, function(err, rows, fields) {
 			if (err) {
 				// throw err;
 
@@ -266,7 +266,7 @@ logic.init();
 
 	 
 	});
-	//异步处理
+	//异步处理 resolve()
 	promise.then(function(value) {
 		//console.log(value);
 		return value;
