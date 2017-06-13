@@ -1,8 +1,10 @@
 exports.dbs = function() {
 var promise = new Promise(function(resolve, reject) {
-var app = require('express')();
+var express=require('express');
+var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+var path = require('path');
 var mysql = require('mysql');
 var count = 0;
 
@@ -213,9 +215,11 @@ var logic = {
 	}
 	,
 	server: function() {
-		app.get('/', function(req, res) {
-			//console.log("http 方式被访问");
-		});
+		//console.log(path.join(__dirname, 'chatClient')) //设置访问目录
+	   app.use(express.static(path.join(__dirname, 'chatClient')))	
+	 //   	app.use(express.cookieParser());
+		// app.use(express.session());
+ 
 	},createConnection:function(socket,MD5){
 		var _this=this;
 		
@@ -235,7 +239,7 @@ var logic = {
 	},
 	init: function() {
 		var _this=this;
-
+			_this.server();		
 		var loadHistory = true;
 		// connection.end();
 		io.on('connection', function(socket) {
