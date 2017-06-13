@@ -1,3 +1,5 @@
 # chatapp
- 
+vue+express+socket+mysql 
+简单私信系统
+登录部分没做，需要MD5才能正常发送 可以手动录入
 http://127.0.0.1:8080/
