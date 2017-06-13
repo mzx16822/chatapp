@@ -146,7 +146,6 @@ var db = {
 }
  
 
- 
 var logic = {
 	stripscript: function(s) {
 		var pattern = new RegExp("'()/\/" + '"')
