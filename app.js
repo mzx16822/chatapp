@@ -1,4 +1,3 @@
-
 exports.dbs = function() {
 var promise = new Promise(function(resolve, reject) {
 var app = require('express')();
@@ -103,7 +102,8 @@ var db = {
  
 			_this.sqlQuery(sql, function(err, rows, fields) {
 				if (err) {
-					throw err;
+					//throw err;
+					console.log(err)
 
 				} else if (rows) {
 					fn && fn(rows)
@@ -117,7 +117,8 @@ var db = {
 			//查找发送给“我”的聊天
 			db.sqlQuery(sql, function(err, rows, fields) {
 				if (err) {
-					throw err;
+					//throw err;
+					console.log(err)
 
 				} else if (rows) {
 

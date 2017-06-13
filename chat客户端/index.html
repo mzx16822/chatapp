@@ -44,7 +44,6 @@
      <script  src="http://192.168.33.233:8080/socket.io/socket.io.js" type=></script>
     <script>
   //  document.cookie="me="+username;
-
 var vm = new Vue({
   el: '#app',
   data: {
@@ -54,7 +53,7 @@ var vm = new Vue({
       server: "personWS",
       me: "daxiong",
       you: "god",
-      MD5:"4d2a107841a9fe18"
+      MD5: "4d2a107841a9fe18"
 
     },
     myinfo: [{
@@ -72,78 +71,82 @@ var vm = new Vue({
     history: 20
   },
   created: function() {
-     _self = this;//data生命周期只有在这里才有效
-     socket = io.connect(_self.config.url); //创建一个ws链接
-    _self.$options.methods.ready(_self);
+    _self = this; //data生命周期只有在这里才有效
+    socket = io.connect(_self.config.url); //创建一个ws链接
+    _self.$options.methods.ready(_self);//rebuilding
   },
-  methods:
-   {
-    ready:function(obj){ 
-      var _this=this;
+  methods: {
+    ready: function(obj) {
 
-        _this.upconfig(obj);//获取用户配置
-
-        _this.getHistory(obj); //请求历史消息
-       
-        _this.resend(socket,"chat"+obj.config.me, function(data) {//实时聊天
-        
-          obj.chatinfo.push(data);
-        });
-
-        _this.resend(socket,"input"+obj.config.me, function(data) {//实时聊天
-          if(data==1){
-            document.title=""+_self.yourinfo.nichen+"正在输入......";   
-          }else{
-            document.title="正在和"+_self.yourinfo.nichen+"聊天";
-          }
-        });
-    
-    },
-    textFunc:function(){
-      var _this = this,go=false;
-        _this.send(socket, "input",{you:_this.config.you,stu:1});
-         setTimeout(function () {
-      
-          _this.send(socket, "input", {you:_this.config.you,stu:0});
-
-            },1000)
-
-       
-    },inputFunc:function(){
       var _this = this;
-         _this.ready(_this);
-  
-       
-    },
-    upconfig:function(obj){
-      // 必须要把运行该函数的 this指向传入， 不然指向当前的this 会被报空值
-      var _this=this;
-      _that=obj;
+      // socket.removeEventListener("chatdaxiong4d2a107841a9fe18")
+      socket.removeAllListeners(); //移除所有监听， 重新建立监听
+      _this.upconfig(obj); //获取用户配置
 
-     var data = {
+      _this.getHistory(obj); //请求历史消息
+
+      _this.resend(socket, "chat" + obj.config.me, function(data) { //实时聊天
+        obj.chatinfo.push(data);
+      });
+
+      _this.resend(socket, "input" + obj.config.me, function(data) { //实时聊天
+        if (data == 1) {
+          document.title = "" + _self.yourinfo.nichen + "正在输入......";
+        } else {
+          document.title = "正在和" + _self.yourinfo.nichen + "聊天";
+        }
+      });
+
+    },
+    textFunc: function() {
+      var _this = this,
+        go = false;
+      _this.send(socket, "input", {
+        you: _this.config.you,
+        stu: 1
+      });
+      setTimeout(function() {
+
+        _this.send(socket, "input", {
+          you: _this.config.you,
+          stu: 0
+        });
+
+      }, 1000);
+    },
+    inputFunc: function() {
+      var _this = this;
+      _this.ready(_this);
+    },
+    upconfig: function(obj) {
+      // 必须要把运行该函数的 this指向传入， 不然指向当前的this 会被报空值
+      var _this = this;
+      _that = obj;
+
+      var data = {
         me: obj.config.me,
         you: obj.config.you,
       };
       _this.send(socket, "userInfo", data);
 
-      _that.resend(socket, "userInfo"+obj.config.me, function(data) { 
-      //聊天用户配置   _this.config.myface=  
-       _that.getuserinfo(obj.config.me, data, function(info) {
-        _that.myinfo = info; //指向 
+      _that.resend(socket, "userInfo" + obj.config.me, function(data) {
+        //聊天用户配置   _this.config.myface=  
+        _that.getuserinfo(obj.config.me, data, function(info) {
+          _that.myinfo = info; //指向 
+        });
+
+        _that.getuserinfo(obj.config.you, data, function(info) {
+          _that.yourinfo = info;
+
+        });
+        document.title = "正在和" + _that.yourinfo.nichen + "聊天";
+
       });
 
-      _that.getuserinfo(obj.config.you, data, function(info) {
-        _that.yourinfo = info;
 
-      });
-    document.title="正在和"+_that.yourinfo.nichen+"聊天"; 
-
-    });
-
- 
-   },
+    },
     getHistory: function(obj) {
-     var  _this = this;
+      var _this = this;
       var data = {
         server: "getHistory",
         me: obj.config.me,
@@ -151,11 +154,11 @@ var vm = new Vue({
         count: obj.history
       };
       obj.$options.methods.send(socket, "getHistory", data);
-        obj.$options.methods.resend(socket, "resHistory"+obj.config.me, function(data) { //监听历史数据返回
-          //获取聊天记录
-          obj.chatinfo = data;
+      obj.$options.methods.resend(socket, "resHistory" + obj.config.me, function(data) { //监听历史数据返回
+        //获取聊天记录
+        obj.chatinfo = data;
 
-        });
+      });
 
     },
     sendMassage: function(event) {
@@ -179,15 +182,15 @@ var vm = new Vue({
       obj.emit(mark, data);
     },
     resend: function(obj, mark, fn) {
-  
-         var md5code=_self.config.MD5;
-        
-      obj.on(mark+md5code, function(data) {
-       fn && fn(data);
+
+      var md5code = _self.config.MD5;
+      console.log("监听了：" + mark + md5code);
+      obj.on(mark + md5code, function(data) {
+        fn && fn(data);
 
       });
- 
-   
+
+
     },
     getuserinfo: function(username, data, fn) {
       //这个函数只是返回某一个用户配置数组
@@ -196,32 +199,24 @@ var vm = new Vue({
         if (data[i].username == username) {
 
           fn && fn(data[i]);
- 
+
 
         }
       }
-
-
-
     }
 
   }
- })
+})
 
 
- 
- vm.$watch("chatinfo", function() { 
+
+vm.$watch("chatinfo", function() {
   var h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
   vm.$refs.scorll.style.height = h * 0.6 + "px";
   vm.$refs.forms.style.height = h * 0.34 + "px"; //放在这个里表示获取聊天的时候 vm已经创建， 相当 JQ 的 ready
-
   vm.$refs.scorll.scrollTop = vm.$refs.scorll.scrollHeight; //滚动聊天
-
   //console.log(vm.userInfo)
- })
- 
-
- 
+})
 
     </script>
 </body>
