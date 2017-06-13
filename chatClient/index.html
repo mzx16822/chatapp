@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="css/style.css" media="screen" type="text/css" />
 </head>
 <body>
-<div class="doc" id="app">
+<div class="doc" id="app" @keyup.13="sendMassage"  > 
       <div id="convo" class="chatwind" data-from="Sonu Joshi">  
         <ul class="chat-thread" ref="scorll" id="scorll">
             <li  v-for="(chat,index) in chatinfo" ref="uli" v-bind:class="chat.me == config.me ? 'me' : 'you'"><i> 
@@ -22,7 +22,7 @@
         </ul>
        <div class="forms" ref="forms"> 
        <p class="line">
-       <textarea v-model="message" :name="message" class="message" @input="textFunc" id="Jmassage" placeholder="Enter your message" required="" ></textarea> <input type="button" class="sub" name="submit" value="发送" @click="sendMassage" @keyup.13="sendMassage" />
+       <textarea v-model="message" :name="message" class="message" @input="textFunc" @focus="curpage" id="Jmassage" placeholder="Enter your message" required=""  ></textarea> <input type="button" class="sub" name="submit" value="发送" @click="sendMassage"  />
        </p>
        <p class="line">
       <label>你的昵称：</label> <input type="text" name=""  v-model="config.me" @input="inputFunc" name="user"  class="text" /> <!--  vm.$set( vm.config,"me",vm.config.me ) -->
@@ -65,17 +65,37 @@ var vm = new Vue({
     }],
     chatinfo: [],
     message: "",
-    history: 20
+    count: 20
   },
   created: function() {
     _self = this; //data生命周期只有在这里才有效
     socket = io.connect(_self.config.url); //创建一个ws链接
     _self.$options.methods.ready(_self);//rebuilding
+   
   },
   methods: {
+    iNotify:function(){
+       var  _record = 0, myTitle = document.title;
+       titleflsh=  setInterval(function(){
+        _record++;
+        if(_record==3){//当变量_record累加到3是，将其赋值为1。相当于无限循环。
+          _record=1;
+        }
+        if(_record==1){
+          document.title=' '+myTitle;
+        }
+        if(_record==2){
+          document.title='你有一条新消息 '+myTitle;
+        }
+ 
+      },500)
+ 
+     this.wintabcur();  
+    },
     ready: function(obj) {
 
       var _this = this;
+
       // socket.removeEventListener("chatdaxiong4d2a107841a9fe18")
       socket.removeAllListeners(); //移除所有监听， 重新建立监听
       _this.upconfig(obj); //获取用户配置
@@ -84,6 +104,12 @@ var vm = new Vue({
 
       _this.resend(socket, "chat" + obj.config.me, function(data) { //实时聊天
         obj.chatinfo.push(data);
+        if(data.me!=obj.config.me){
+          console.log("收到一条信息")
+          _this.iNotify();
+        }
+      
+    
       });
 
       _this.resend(socket, "input" + obj.config.me, function(data) { //实时聊天
@@ -113,8 +139,43 @@ var vm = new Vue({
     },
     inputFunc: function() {
       var _this = this;
-      _this.ready(_this);
-    },
+      var _temp =setTimeout(function() {
+       _this.ready(_this);
+       }, 1000);
+
+    },curpage:function(){
+      try{
+        if(titleflsh){
+           clearInterval(titleflsh);
+         document.title = "正在和" + _self.yourinfo.nichen + "聊天";
+        }
+      } catch(e){
+        console.log("还没收到消息")
+      }
+      
+      
+    }
+    ,wintabcur:function(){
+       var _this = this;
+         var hiddenProperty = 'hidden' in document ? 'hidden' :    
+          'webkitHidden' in document ? 'webkitHidden' :    
+          'mozHidden' in document ? 'mozHidden' :    
+          null;
+      var visibilityChangeEvent = hiddenProperty.replace(/hidden/i, 'visibilitychange');
+      var onVisibilityChange = function(){
+          if (document[hiddenProperty]) {    
+              //判断有点奇怪  这个东西不可靠
+          }else{
+
+              clearInterval(titleflsh);
+             document.title = "正在和" + _self.yourinfo.nichen + "聊天";
+            
+          }
+      }
+      document.addEventListener(visibilityChangeEvent, onVisibilityChange);
+    }
+    
+    ,
     upconfig: function(obj) {
       // 必须要把运行该函数的 this指向传入， 不然指向当前的this 会被报空值
       var _this = this;
@@ -148,7 +209,7 @@ var vm = new Vue({
         server: "getHistory",
         me: obj.config.me,
         you: obj.config.you,
-        count: obj.history
+        count: obj.count
       };
       obj.$options.methods.send(socket, "getHistory", data);
       obj.$options.methods.resend(socket, "resHistory" + obj.config.me, function(data) { //监听历史数据返回
@@ -205,15 +266,13 @@ var vm = new Vue({
 })
 
 
-
 vm.$watch("chatinfo", function() {
   var h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
-  vm.$refs.scorll.style.height = h * 0.6 + "px";
-  vm.$refs.forms.style.height = h * 0.34 + "px"; //放在这个里表示获取聊天的时候 vm已经创建， 相当 JQ 的 ready
+  vm.$refs.scorll.style.height = h * 0.66 + "px";
+  vm.$refs.forms.style.height = h * 0.14 + "px"; //放在这个里表示获取聊天的时候 vm已经创建， 相当 JQ 的 ready
   vm.$refs.scorll.scrollTop = vm.$refs.scorll.scrollHeight; //滚动聊天
-  //console.log(vm.userInfo)
+ 
 })
-
     </script>
 </body>
 </html>

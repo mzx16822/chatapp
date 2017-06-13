@@ -7,7 +7,7 @@ var io = require('socket.io')(http);
 var path = require('path');
 var mysql = require('mysql');
 var count = 0;
-
+//mysql没有做异常处理 语句拼接有问题会导致终止运行
 var db = {
 	config: {
 		host: 'localhost',
@@ -16,15 +16,29 @@ var db = {
 		database: 'chatdb'
 	},
 	init: function() {
-		var connection = mysql.createConnection(this.config);
-		connection.connect()
-		return connection;
+		var _this=this;
+		 connection = mysql.createConnection(this.config);
+		 connection.connect(function(err) {       
+		    if(err) {                                  
+		      console.log('error when connecting to db:', err);
+		      setTimeout(_this.init(), 2000); 
+		    }                                    
+		  });  
+		connection.on("error",function(err){
+			if(err.code === 'PROTOCOL_CONNECTION_LOST') { 
+		      _this.init();                       
+		    } else {                                  
+		      throw err;                              
+		    }
+		})
+		 return connection;
 	},
 	sqlQuery: function(sql, fn) {
 			//	console.log(sql);
 		this.init().query(sql, function(err, rows, fields) {
 			fn && fn(err, rows, fields);
 		})
+		this.init().end();
 	},
 	getUserinfo: function(userinfo, fn) {
 		var _this = this, _sql = "",sql="";
@@ -43,7 +57,7 @@ var db = {
 		_this.sqlQuery(sql, function(err, rows, fields) {
 			if (err) {
 				//throw err;
-				console.log(err);
+				//console.log(err);
 
 			} else if (rows) {
 				for (var i = rows.length - 1; i >= 0; i--) {
@@ -70,7 +84,7 @@ var db = {
 		_this.sqlQuery(sql, function(err, rows, fields) {
 			if (err) {
 				//throw err;
-				//console.log(err)
+				 
 
 			} else if (rows) {
 	 					
@@ -105,7 +119,7 @@ var db = {
 			_this.sqlQuery(sql, function(err, rows, fields) {
 				if (err) {
 					//throw err;
-					console.log(err)
+					//console.log(err)
 
 				} else if (rows) {
 					fn && fn(rows)
@@ -120,7 +134,7 @@ var db = {
 			db.sqlQuery(sql, function(err, rows, fields) {
 				if (err) {
 					//throw err;
-					console.log(err)
+					//console.log(err)
 
 				} else if (rows) {
 
@@ -222,7 +236,7 @@ var logic = {
  
 	},createConnection:function(socket,MD5){
 		var _this=this;
-		
+			
 			_this.addlisten(socket,"chat",function(room,data){
 
 			}) 
@@ -255,7 +269,13 @@ var logic = {
 		});
 		
 		
-
+		app.use(function (err, req, res, next) {
+			res.status(err.status || 500);
+			res.render('error', {
+				message: err.message,
+				error: {}
+			});
+		});
 		http.listen(8080, function(data) {
 			console.log('listening on *:8080');
 		});

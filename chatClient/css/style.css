@@ -202,7 +202,9 @@ textarea {  -webkit-appearance: none;}
     margin-right: 0;
   }
 }
-.chatwind{}
+.chatwind{
+  margin-top: 1%;
+}
 .credits{
   text-align:center;
   margin-top:35px;
