@@ -127,7 +127,7 @@ var db = {
 
 				}
 			})
-	},getHistory:function(data){
+	},getHistory:function(data,fn){
 		var _sql=" (username='" + data.me+ "' and friends='"+data.you+"') or "+" (username='" + data.you+ "' and friends='"+data.me+"')";
 		var sql = "select * from chat_history where"+ _sql +" order by id desc limit  " + data.count;
 			//查找发送给“我”的聊天
@@ -150,10 +150,7 @@ var db = {
 						});
 
 					}
-
-
-					logic.emitfn("resHistory",data.me, array); //返回请求历史消息的一方
-
+					fn&&fn(array)
 
 				}
 
@@ -208,7 +205,9 @@ var logic = {
 		break;
 		case "getHistory"://历史消息
 				
-			db.getHistory(data);
+			db.getHistory(data,function(array){
+				_this.emitfn("resHistory",data.me, array); //返回请求历史消息的一方
+			});
 			
 			break;
 		}
