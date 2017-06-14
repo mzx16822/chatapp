@@ -1,5 +1,4 @@
-exports.dbs = function() {
-var promise = new Promise(function(resolve, reject) {
+ 
 var express=require('express');
 var app = express();
 var http = require('http').Server(app);
@@ -14,7 +13,10 @@ var db = {
 		user: 'root',
 		password: 'root',
 		database: 'chatdb'
-	},
+	},_tmp:{
+		md5arr:{}
+	}
+	,
 	init: function() {
 		var _this=this;
 		 connection = mysql.createConnection(this.config);
@@ -24,21 +26,18 @@ var db = {
 		      setTimeout(_this.init(), 2000); 
 		    }                                    
 		  });  
-		connection.on("error",function(err){
-			if(err.code === 'PROTOCOL_CONNECTION_LOST') { 
-		      _this.init();                       
-		    } else {                                  
-		      throw err;                              
-		    }
-		})
+		connection.on("error",function(err){})
 		 return connection;
 	},
 	sqlQuery: function(sql, fn) {
 			//	console.log(sql);
-		this.init().query(sql, function(err, rows, fields) {
-			fn && fn(err, rows, fields);
-		})
-		this.init().end();
+		 
+			this.init().query(sql, function(err, rows, fields) {
+				fn && fn(err, rows, fields);
+			})
+			this.init().end();
+
+		
 	},
 	getUserinfo: function(userinfo, fn) {
 		var _this = this, _sql = "",sql="";
@@ -76,26 +75,27 @@ var db = {
 
 
 	},
-	getUserMD5: function(username, fn) {
-		var _this = this;
-		if(!username) return false;
-		var sql = "select MD5 from userinfo where username='" + username + "' limit 1";
-
-		_this.sqlQuery(sql, function(err, rows, fields) {
-			if (err) {
-				//throw err;
-				 
-
-			} else if (rows) {
-	 					
-			 fn && fn(rows[0].MD5);	
-			 
-				
- 			   // resolve(rows[0].MD5);
- 			 
-			}
-		})
-
+	getUserMD5: function(username) {
+	var _this = this;
+ 		return	new Promise(function(resolve, reject){  //异步查询 返回
+ 			 	if(!_this._tmp.md5arr[username]){ //减少数据库的查询
+	 			var sql = "select MD5 from userinfo where username='" + username + "' limit 1";
+	 			 
+				_this.sqlQuery(sql, function(err, rows, fields) {
+					if (err) {
+						//throw err;
+						resolve(false);
+					} else if (rows) {
+					 _this._tmp.md5arr[username]=rows[0].MD5; 
+		 			  resolve(rows[0].MD5);
+					}
+				})
+					}else{
+			 		 resolve(_this._tmp.md5arr[username])
+			 	}
+ 		})
+			
+	 	
 	},
 	setUserlogindate: function(username, fn) {
 		var _this = this;
@@ -213,13 +213,14 @@ var logic = {
 		}
 
 	},emitfn:function(mark,msgto,data){
+
+		db.getUserMD5(msgto).then(function (value) {
+			   // console.log(value);    // => 'Async Hello world'
+			   io.emit(mark+msgto+value, data);
+			}).catch(function (error) {
+			    console.log(error);
+			});
  
-		 db.getUserMD5(msgto,function(md5){
-			io.emit(mark+msgto+md5, data);
-			 // console.log("发送了一个:"+mark+msgto+md5);
-		});
-	
-		
 	},addlisten:function(obj,room,fn){
 		obj.on(room, function(data) {
 		 logic.do(room, data);
@@ -233,7 +234,7 @@ var logic = {
 	 //   	app.use(express.cookieParser());
 		// app.use(express.session());
  
-	},createConnection:function(socket,MD5){
+	},createConnection:function(socket){
 		var _this=this;
 			
 			_this.addlisten(socket,"chat",function(room,data){
@@ -284,15 +285,4 @@ var logic = {
 logic.init();
 
 	 
-	});
-	//异步处理 resolve()
-	promise.then(function(value) {
-		//console.log(value);
-		return value;
-		// success
-	}, function(value) {
-		// failure
-	});
-	return promise;
-};
-exports.dbs();
+ 
