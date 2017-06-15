@@ -1,4 +1,3 @@
- 
 var express=require('express');
 var app = express();
 var http = require('http').Server(app);
@@ -12,32 +11,36 @@ var db = {
 		host: 'localhost',
 		user: 'root',
 		password: 'root',
-		database: 'chatdb'
+		database: 'chatdb',
+		connectionLimit : 300,
+		pool:{ maxConnections: 50, maxIdleTime: 30}
 	},_tmp:{
 		md5arr:{}
 	}
 	,
 	init: function() {
 		var _this=this;
-		 connection = mysql.createConnection(this.config);
-		 connection.connect(function(err) {       
-		    if(err) {                                  
-		      console.log('error when connecting to db:', err);
-		      setTimeout(_this.init(), 2000); 
-		    }                                    
-		  });  
-		connection.on("error",function(err){})
-		 return connection;
+		  pool = mysql.createPool(this.config);
+		pool.on('connection', function (connection) {
+		  connection.query('SET SESSION auto_increment_increment=1');
+		});
+		pool.on('enqueue', function () {
+		  console.log('Waiting for available connection slot');
+		});
+		pool.on('enqueue', function () {
+		  console.log('Waiting for available connection slot');
+		});
+		 return pool;
 	},
 	sqlQuery: function(sql, fn) {
 			//	console.log(sql);
-		 
-			this.init().query(sql, function(err, rows, fields) {
-				fn && fn(err, rows, fields);
-			})
-			this.init().end();
+		 	this.init().getConnection(function(err, connection){
+		 		connection.query(sql, function(err, rows, fields) {
+					fn && fn(err, rows, fields);
+				})
+				connection.release();//连接池
+		 	})
 
-		
 	},
 	getUserinfo: function(userinfo, fn) {
 		var _this = this, _sql = "",sql="";
@@ -58,7 +61,7 @@ var db = {
 				//throw err;
 				//console.log(err);
 
-			} else if (rows) {
+			} else if (rows>0) {
 				for (var i = rows.length - 1; i >= 0; i--) {
 
 					arr.push({
@@ -85,7 +88,7 @@ var db = {
 					if (err) {
 						//throw err;
 						resolve(false);
-					} else if (rows) {
+					} else if (rows.length>0) { //返回行数判断 以免MD5值underfind
 					 _this._tmp.md5arr[username]=rows[0].MD5; 
 		 			  resolve(rows[0].MD5);
 					}
@@ -106,7 +109,7 @@ var db = {
 			if (err) {
 				// throw err;
 
-			} else {
+			} else if(rows.length>0) {
 				fn && fn(rows.changedRows);
 
 			}
@@ -122,7 +125,7 @@ var db = {
 					//throw err;
 					//console.log(err)
 
-				} else if (rows) {
+				} else if (rows.length>0) {
 					fn && fn(rows)
 					
 
@@ -137,7 +140,7 @@ var db = {
 					//throw err;
 					//console.log(err)
 
-				} else if (rows) {
+				} else if (rows.length>0) {
 
 					var array = [];
 
@@ -183,12 +186,8 @@ var logic = {
 			//	console.log(data.me + "刚刚登陆了！")
 			})
 			db.insertchatmsg(data,function(rows){
-				console.log(data.me)
-				if(rows){	
 				 _this.emitfn("chat",data.you, data); //给对方发送消息
 				 _this.emitfn("chat",data.me, data); //给我发送消息 即使我的消息也由服务器返回消息
-				}
-				
 			});
 			
 			//console.log(data.me + " 发送给：" + data.you);
@@ -214,14 +213,12 @@ var logic = {
 		}
 
 	},emitfn:function(mark,msgto,data){
-
 		db.getUserMD5(msgto).then(function (value) {
-			    console.log(value);    
+			    console.log(msgto+":"+value);    
 			   io.emit(mark+msgto+value, data);
 			}).catch(function (error) {
 			    console.log(error);
 			});
-	 
 		
 	},addlisten:function(obj,room,fn){
 		obj.on(room, function(data) {
