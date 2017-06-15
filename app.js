@@ -75,9 +75,9 @@ var db = {
 
 
 	},
-	getUserMD5: function(username) {
+	getUserMD5: function(username, fn) {
 	var _this = this;
- 		return	new Promise(function(resolve, reject){  //异步查询 返回
+ 		return	new Promise(function(resolve, reject){
  			 	if(!_this._tmp.md5arr[username]){ //减少数据库的查询
 	 			var sql = "select MD5 from userinfo where username='" + username + "' limit 1";
 	 			 
@@ -91,6 +91,7 @@ var db = {
 					}
 				})
 					}else{
+ 
 			 		 resolve(_this._tmp.md5arr[username])
 			 	}
  		})
@@ -215,12 +216,13 @@ var logic = {
 	},emitfn:function(mark,msgto,data){
 
 		db.getUserMD5(msgto).then(function (value) {
-			   // console.log(value);    // => 'Async Hello world'
+			    console.log(value);    
 			   io.emit(mark+msgto+value, data);
 			}).catch(function (error) {
 			    console.log(error);
 			});
- 
+	 
+		
 	},addlisten:function(obj,room,fn){
 		obj.on(room, function(data) {
 		 logic.do(room, data);
