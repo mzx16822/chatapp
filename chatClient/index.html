@@ -166,6 +166,8 @@ var vm = new Vue({
       var onVisibilityChange = function(){
           if (document[hiddenProperty]) {    
               //判断有点奇怪  这个东西不可靠
+               clearInterval(titleflsh);
+             document.title = "正在和" + _self.yourinfo.nichen + "聊天";
           }else{
 
               clearInterval(titleflsh);

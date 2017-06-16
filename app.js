@@ -5,7 +5,6 @@ var io = require('socket.io')(http);
 var path = require('path');
 var mysql = require('mysql');
 var count = 0;
-//mysql没有做异常处理 语句拼接有问题会导致终止运行
 var db = {
 	config: {
 		host: 'localhost',
@@ -13,7 +12,7 @@ var db = {
 		password: 'root',
 		database: 'chatdb',
 		connectionLimit : 300,
-		pool:{ maxConnections: 50, maxIdleTime: 30}
+		pool:{ maxConnections: 300, maxIdleTime: 300}
 	},_tmp:{
 		md5arr:{}
 	}
@@ -27,9 +26,7 @@ var db = {
 		pool.on('enqueue', function () {
 		  console.log('Waiting for available connection slot');
 		});
-		pool.on('enqueue', function () {
-		  console.log('Waiting for available connection slot');
-		});
+ 
 		 return pool;
 	},
 	sqlQuery: function(sql, fn) {
