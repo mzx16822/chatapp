@@ -58,7 +58,8 @@ var db = {
 				//throw err;
 				//console.log(err);
 
-			} else if (rows>0) {
+			} else if (rows.length>0) {
+
 				for (var i = rows.length - 1; i >= 0; i--) {
 
 					arr.push({
@@ -69,8 +70,8 @@ var db = {
 				}
  
 				fn && fn(arr);
-
-			}
+				//console.log(arr)
+			} 
 		})
 
 
@@ -106,7 +107,7 @@ var db = {
 			if (err) {
 				// throw err;
 
-			} else if(rows.length>0) {
+			} else  {
 				fn && fn(rows.changedRows);
 
 			}
@@ -118,14 +119,14 @@ var db = {
 		var sql = 'insert into chat_history (username,friends,date,msg) values ("' + data.me + '","' + data.you + '",' + new Date().getTime() + ',"' + data.msg + '")';
  
 			_this.sqlQuery(sql, function(err, rows, fields) {
+				console.log(rows.length) 
 				if (err) {
 					//throw err;
 					//console.log(err)
 
-				} else if (rows.length>0) {
+				} else   {
 					fn && fn(rows)
 					
-
 				}
 			})
 	},getHistory:function(data,fn){
@@ -151,6 +152,7 @@ var db = {
 						});
 
 					}
+					console.log(rows[0].username)
 					fn&&fn(array)
 
 				}
@@ -183,6 +185,7 @@ var logic = {
 			//	console.log(data.me + "刚刚登陆了！")
 			})
 			db.insertchatmsg(data,function(rows){
+					console.log("插入成功")
 				 _this.emitfn("chat",data.you, data); //给对方发送消息
 				 _this.emitfn("chat",data.me, data); //给我发送消息 即使我的消息也由服务器返回消息
 			});
@@ -190,7 +193,9 @@ var logic = {
 			//console.log(data.me + " 发送给：" + data.you);
 			break;
 		case "userInfo"://用户配置信息
+
  			 db.getUserinfo(data, function(cbdata) {
+
 				_this.emitfn("userInfo",data.me, cbdata);
 				 
 			})
@@ -210,14 +215,15 @@ var logic = {
 		}
 
 	},emitfn:function(mark,msgto,data){
-		db.getUserMD5(msgto).then(function (value) {
-			    console.log(msgto+":"+value);    
-			   io.emit(mark+msgto+value, data);
+		db.getUserMD5(msgto).then(function (md5) {
+ 
+			   io.emit(mark+msgto+md5, data);
 			}).catch(function (error) {
 			    console.log(error);
 			});
 		
 	},addlisten:function(obj,room,fn){
+ 
 		obj.on(room, function(data) {
 		 logic.do(room, data);
 		  fn&&fn(room,data);
@@ -234,7 +240,7 @@ var logic = {
 		var _this=this;
 			
 			_this.addlisten(socket,"chat",function(room,data){
-
+				console.log("chat")
 			}) 
 			_this.addlisten(socket,"userInfo",function(room,data){
 				

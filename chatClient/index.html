@@ -102,7 +102,7 @@ var vm = new Vue({
 
       _this.getHistory(obj); //请求历史消息
 
-      _this.resend(socket, "chat" + obj.config.me, function(data) { //实时聊天
+      _this.resend(socket, "chat", function(data) { //实时聊天
         obj.chatinfo.push(data);
         if(data.me!=obj.config.me){
           console.log("收到一条信息")
@@ -111,9 +111,11 @@ var vm = new Vue({
       
     
       });
+
+
       
 
-      _this.resend(socket, "input" + obj.config.me, function(data) { //实时聊天
+      _this.resend(socket, "input", function(data) { //实时聊天
         if (data == 1) {
           document.title = "" + _self.yourinfo.nichen + "正在输入......";
         } else {
@@ -189,8 +191,9 @@ var vm = new Vue({
         you: obj.config.you,
       };
       _this.send(socket, "userInfo", data);
-
-      _that.resend(socket, "userInfo" + obj.config.me, function(data) {
+ 
+      _that.resend(socket, "userInfo", function(data) {
+         
         //聊天用户配置   _this.config.myface=  
         _that.getuserinfo(obj.config.me, data, function(info) {
           _that.myinfo = info; //指向 
@@ -215,7 +218,7 @@ var vm = new Vue({
         count: obj.count
       };
       obj.$options.methods.send(socket, "getHistory", data);
-      obj.$options.methods.resend(socket, "resHistory" + obj.config.me, function(data) { //监听历史数据返回
+      obj.$options.methods.resend(socket, "resHistory", function(data) { //监听历史数据返回
         //获取聊天记录
         obj.chatinfo = data;
 
@@ -239,14 +242,15 @@ var vm = new Vue({
 
     },
     send: function(obj, mark, data) {
-      console.log(mark)
+       
       obj.emit(mark, data);
     },
     resend: function(obj, mark, fn) {
 
       var md5code = _self.config.MD5;
-
-      obj.on(mark + md5code, function(data) {
+      var me = _self.config.me;
+      console.log(mark+me + md5code);
+      obj.on(mark+me + md5code, function(data) {
         fn && fn(data);
       });
 
