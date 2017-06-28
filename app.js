@@ -70,7 +70,6 @@ var db = {
 				}
  
 				fn && fn(arr);
-				//console.log(arr)
 			} 
 		})
 
