@@ -3,8 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./app"
+    "start": "node ./bin/www"
   },
+  "start": "node ./node.js" ,
   "dependencies": {
     "express": "^4.15.3",
     "express-session": "^1.15.3",
